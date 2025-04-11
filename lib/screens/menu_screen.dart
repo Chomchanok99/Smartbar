@@ -1,11 +1,13 @@
-// lib/screens/menu_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/menu_item.dart';
 import '../models/cart_model.dart';
 import '../data/sample_menu.dart';
+
 import 'cart_screen.dart';
 import 'admin_menu_screen.dart';
+import 'order_summary_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   @override
@@ -37,18 +39,41 @@ class MenuScreen extends StatelessWidget {
               subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
               trailing: IconButton(
                 icon: Icon(Icons.add_shopping_cart),
-                onPressed: () => cart.addItem(item),
+                onPressed: () {
+                  cart.addItem(item);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${item.name} ถูกเพิ่มในตะกร้า')),
+                  );
+                },
               ),
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.settings),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AdminMenuScreen()),
-        ),
+
+      // ปุ่มลอย: ผู้ดูแล / สรุปคำสั่งซื้อ
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'admin',
+            child: Icon(Icons.settings),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMenuScreen()),
+            ),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'summary',
+            backgroundColor: Colors.blue,
+            child: Icon(Icons.list_alt),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => OrderSummaryScreen()),
+            ),
+          ),
+        ],
       ),
     );
   }

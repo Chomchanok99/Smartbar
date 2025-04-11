@@ -1,7 +1,7 @@
-// lib/screens/admin_menu_screen.dart
 import 'package:flutter/material.dart';
 import '../models/menu_item.dart';
 import '../data/sample_menu.dart';
+import 'order_history_screen.dart';
 
 class AdminMenuScreen extends StatefulWidget {
   @override
@@ -33,7 +33,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                 return ListTile(
                   leading: Image.asset(item.imagePath, width: 50, height: 50),
                   title: Text(item.name),
-                  subtitle: Text('฿${item.price}'),
+                  subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
@@ -44,7 +44,9 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
               },
             ),
           ),
+
           Divider(),
+
           Padding(
             padding: EdgeInsets.all(10),
             child: Column(
@@ -61,6 +63,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                 DropdownButton<String>(
                   value: selectedImage,
                   hint: Text('เลือกรูปภาพ'),
+                  isExpanded: true,
                   items: availableImages.map((img) {
                     return DropdownMenuItem(
                       child: Text(img.split('/').last),
@@ -69,6 +72,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                   }).toList(),
                   onChanged: (value) => setState(() => selectedImage = value),
                 ),
+                SizedBox(height: 8),
                 ElevatedButton(
                   child: Text('เพิ่มเมนู'),
                   onPressed: () {
@@ -78,7 +82,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                       setState(() {
                         sampleMenu.add(MenuItem(
                           name: nameController.text,
-                          price: double.parse(priceController.text),
+                          price: double.tryParse(priceController.text) ?? 0,
                           imagePath: selectedImage!,
                         ));
                         nameController.clear();
@@ -87,7 +91,21 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                       });
                     }
                   },
-                )
+                ),
+
+                // ปุ่มดูคำสั่งซื้อย้อนหลัง
+                SizedBox(height: 10),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.history),
+                  label: Text('ดูคำสั่งซื้อย้อนหลัง'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => OrderHistoryScreen()),
+                  ),
+                ),
               ],
             ),
           )
