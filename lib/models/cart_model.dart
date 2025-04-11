@@ -12,6 +12,19 @@ class CartModel extends ChangeNotifier {
   List<CartItem> _items = [];
   List<CartItem> get items => _items;
 
+  int? selectedTable;
+  DateTime? selectedDateTime;
+
+  void setTable(int table) {
+    selectedTable = table;
+    notifyListeners();
+  }
+
+  void setDateTime(DateTime dateTime) {
+    selectedDateTime = dateTime;
+    notifyListeners();
+  }
+
   void addItem(MenuItem item) {
     final index = _items.indexWhere((e) => e.item.name == item.name);
     if (index >= 0) {

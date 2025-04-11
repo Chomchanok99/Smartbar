@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'models/cart_model.dart';
 import 'screens/menu_screen.dart';
 
@@ -18,11 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Food Ordering App',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        fontFamily: 'Kanit', // ใส่ถ้ามีฟอนต์ไทย
-      ),
-      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.orange),
       home: MenuScreen(),
     );
   }
