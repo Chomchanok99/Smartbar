@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'menu_item.dart';
-import 'order_model.dart';
 
 class CartItem {
   final MenuItem item;
@@ -10,12 +9,10 @@ class CartItem {
 }
 
 class CartModel extends ChangeNotifier {
-  List<CartItem> _items = [];
-  int? selectedTable;
-  DateTime? selectedDateTime;
-
+  final List<CartItem> _items = [];
   List<CartItem> get items => _items;
-  double get total => _items.fold(0, (sum, e) => sum + e.quantity * e.item.price);
+
+  double get total => _items.fold(0, (sum, e) => sum + e.item.price * e.quantity);
 
   void addItem(MenuItem item) {
     final index = _items.indexWhere((e) => e.item.name == item.name);
@@ -27,52 +24,22 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void increaseQty(CartItem cartItem) {
-    cartItem.quantity++;
+  void increaseQty(CartItem item) {
+    item.quantity++;
     notifyListeners();
   }
 
-  void decreaseQty(CartItem cartItem) {
-    if (cartItem.quantity > 1) {
-      cartItem.quantity--;
+  void decreaseQty(CartItem item) {
+    if (item.quantity > 1) {
+      item.quantity--;
     } else {
-      _items.remove(cartItem);
+      _items.remove(item);
     }
     notifyListeners();
   }
 
   void clear() {
     _items.clear();
-    selectedTable = null;
-    selectedDateTime = null;
-    notifyListeners();
-  }
-
-  void setTable(int table) {
-    selectedTable = table;
-    notifyListeners();
-  }
-
-  void setDateTime(DateTime dateTime) {
-    selectedDateTime = dateTime;
-    notifyListeners();
-  }
-
-  // 🔄 Order History
-  final List<Order> _orderHistory = [];
-  List<Order> get orderHistory => _orderHistory;
-
-  void confirmOrder() {
-    if (selectedTable != null &&
-        selectedDateTime != null &&
-        _items.isNotEmpty) {
-      _orderHistory.add(Order(
-        table: selectedTable!,
-        dateTime: selectedDateTime!,
-        items: _items.map((e) => OrderItem(e.item, e.quantity)).toList(),
-      ));
-      clear();
-    }
     notifyListeners();
   }
 }
