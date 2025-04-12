@@ -14,6 +14,8 @@ class CartModel extends ChangeNotifier {
 
   double get total => _items.fold(0, (sum, e) => sum + e.item.price * e.quantity);
 
+  get orderHistory => null;
+
   void addItem(MenuItem item) {
     final index = _items.indexWhere((e) => e.item.name == item.name);
     if (index >= 0) {
