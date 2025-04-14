@@ -1,0 +1,29 @@
+{
+    "project_info": {
+      "project_number": "38964338092",
+      "project_id": "food-ordering-app-b9759",
+      "storage_bucket": "food-ordering-app-b9759.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:38964338092:android:7244527f35a9af689b2e09",
+          "android_client_info": {
+            "package_name": "com.example.smartbar"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "AIzaSyDnFEM-JiqTyG0SeYjkcg-OKw4dOF0MeeA"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }

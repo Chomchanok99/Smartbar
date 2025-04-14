@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import 'models/cart_model.dart';
 import 'screens/menu_screen.dart';
 import 'screens/admin_menu_screen.dart';
 
-void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => CartModel(),
-      child: MyApp(),
-    ),
-  );
+import 'package:firebase_core/firebase_core.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

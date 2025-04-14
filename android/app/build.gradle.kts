@@ -1,3 +1,5 @@
+apply plugin: 'com.google.gms.google-services'
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -42,3 +44,4 @@ android {
 flutter {
     source = "../.."
 }
+

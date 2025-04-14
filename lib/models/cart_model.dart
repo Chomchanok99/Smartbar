@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'menu_item.dart';
+import 'order_record.dart';
 
 class CartItem {
   final MenuItem item;
@@ -13,8 +15,6 @@ class CartModel extends ChangeNotifier {
   List<CartItem> get items => _items;
 
   double get total => _items.fold(0, (sum, e) => sum + e.item.price * e.quantity);
-
-  get orderHistory => null;
 
   void addItem(MenuItem item) {
     final index = _items.indexWhere((e) => e.item.name == item.name);
@@ -42,6 +42,22 @@ class CartModel extends ChangeNotifier {
 
   void clear() {
     _items.clear();
+    notifyListeners();
+  }
+
+  // ✅ ส่งคำสั่งซื้อไปยัง Firebase Firestore
+  Future<void> submitOrder(String table, DateTime dateTime) async {
+    final order = OrderRecord(
+      table,
+      dateTime,
+      _items.map((e) => '${e.item.name} x${e.quantity}').toList(),
+    );
+
+    await FirebaseFirestore.instance
+        .collection('orders')
+        .add(order.toMap());
+
+    clear();
     notifyListeners();
   }
 }

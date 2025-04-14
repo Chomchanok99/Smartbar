@@ -1,9 +1,8 @@
 // lib/screens/admin_menu_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:smartbar/screens/cart_screen.dart' show OrderRecord;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/menu_item.dart';
-import '../models/cart_model.dart';
+import '../models/order_record.dart';
 import '../data/sample_menu.dart';
 
 class AdminMenuScreen extends StatefulWidget {
@@ -23,10 +22,22 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
     'assets/images/tomyum.png',
   ];
 
+  List<OrderRecord> orders = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+    final fetched = snapshot.docs.map((doc) => OrderRecord.fromMap(doc.data())).toList();
+    setState(() => orders = fetched);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cartModel = Provider.of<CartModel>(context);
-
     return Scaffold(
       appBar: AppBar(title: Text('จัดการเมนู')),
       body: Column(
@@ -121,7 +132,10 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
             ),
           ),
           Expanded(
-            child: OrderHistoryList(filterTable: selectedTable, orders: cartModel.orderHistory),
+            child: OrderHistoryList(
+              filterTable: selectedTable,
+              orders: orders,
+            ),
           ),
         ],
       ),
@@ -131,14 +145,13 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
 
 class OrderHistoryList extends StatelessWidget {
   final String filterTable;
-  final List<OrderRecord>? orders;
-
+  final List<OrderRecord> orders;
 
   const OrderHistoryList({required this.filterTable, required this.orders});
 
   @override
   Widget build(BuildContext context) {
-    final filteredOrders = (orders ?? []).where((o) => o.tableNumber == filterTable).toList();
+    final filteredOrders = orders.where((o) => o.tableNumber == filterTable).toList();
 
     return ListView.builder(
       itemCount: filteredOrders.length,

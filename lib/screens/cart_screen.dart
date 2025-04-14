@@ -13,8 +13,6 @@ class _CartScreenState extends State<CartScreen> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
 
-  List<OrderRecord> orderHistory = [];
-
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context);
@@ -102,7 +100,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       SizedBox(height: 10),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (selectedTable == null || selectedDate == null || selectedTime == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
@@ -118,16 +116,8 @@ class _CartScreenState extends State<CartScreen> {
                             selectedTime!.minute,
                           );
 
-                          final order = OrderRecord(
-                            selectedTable!,
-                            orderTime,
-                            cart.items.map((item) => '${item.item.name} x${item.quantity}').toList(),
-                          );
+                          await cart.submitOrder(selectedTable!, orderTime);
 
-                          // เพิ่มคำสั่งซื้อจริงไปยัง orderHistory ทั่วไป (สมมุติ)
-                          orderHistory.add(order);
-
-                          cart.clear();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('สั่งอาหารสำเร็จสำหรับโต๊ะ $selectedTable')),
                           );
@@ -142,12 +132,4 @@ class _CartScreenState extends State<CartScreen> {
             ),
     );
   }
-}
-
-class OrderRecord {
-  final String tableNumber;
-  final DateTime dateTime;
-  final List<String> items;
-
-  OrderRecord(this.tableNumber, this.dateTime, this.items);
 }
