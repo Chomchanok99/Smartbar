@@ -1,8 +1,6 @@
 // lib/screens/admin_menu_screen.dart
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/menu_item.dart';
-import '../models/order_record.dart';
 import '../data/sample_menu.dart';
 
 class AdminMenuScreen extends StatefulWidget {
@@ -22,19 +20,10 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
     'assets/images/tomyum.png',
   ];
 
-  List<OrderRecord> orders = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadOrders();
-  }
-
-  Future<void> _loadOrders() async {
-    final snapshot = await FirebaseFirestore.instance.collection('orders').get();
-    final fetched = snapshot.docs.map((doc) => OrderRecord.fromMap(doc.data())).toList();
-    setState(() => orders = fetched);
-  }
+  final List<OrderRecord> orders = [
+    OrderRecord('1', DateTime.now(), ['ข้าวผัดหมู x1', 'ต้มยำกุ้ง x2']),
+    OrderRecord('2', DateTime.now().subtract(Duration(hours: 1)), ['ผัดไทย x1']),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -132,15 +121,20 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
             ),
           ),
           Expanded(
-            child: OrderHistoryList(
-              filterTable: selectedTable,
-              orders: orders,
-            ),
+            child: OrderHistoryList(filterTable: selectedTable, orders: orders),
           ),
         ],
       ),
     );
   }
+}
+
+class OrderRecord {
+  final String tableNumber;
+  final DateTime dateTime;
+  final List<String> items;
+
+  OrderRecord(this.tableNumber, this.dateTime, this.items);
 }
 
 class OrderHistoryList extends StatelessWidget {
