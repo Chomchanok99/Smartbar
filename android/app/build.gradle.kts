@@ -1,4 +1,3 @@
-apply plugin: 'com.google.gms.google-services'
 
 plugins {
     id("com.android.application")
@@ -45,3 +44,4 @@ flutter {
     source = "../.."
 }
 
+apply(plugin = "com.google.gms.google-services")
