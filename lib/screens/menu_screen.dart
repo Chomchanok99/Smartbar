@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
 import '../data/sample_menu.dart';
+import '../models/menu_item.dart';
 import 'cart_screen.dart';
 
 class MenuScreen extends StatefulWidget {
@@ -54,19 +55,28 @@ class _MenuScreenState extends State<MenuScreen> {
                     .where((item) => item.category == category)
                     .toList();
 
-                return ExpansionTile(
-                  title: Text(category, style: TextStyle(fontWeight: FontWeight.bold)),
-                  children: categoryItems.map((item) {
-                    return ListTile(
-                      leading: Image.asset(item.imagePath, width: 50, height: 50),
-                      title: Text(item.name),
-                      subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.add_shopping_cart),
-                        onPressed: () => cart.addItem(item),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        category,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    ...categoryItems.map((item) {
+                      return ListTile(
+                        leading: Image.asset(item.imagePath, width: 50, height: 50),
+                        title: Text(item.name),
+                        subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.add_shopping_cart),
+                          onPressed: () => cart.addItem(item),
+                        ),
+                      );
+                    }).toList(),
+                  ],
                 );
               }).toList(),
             ),
