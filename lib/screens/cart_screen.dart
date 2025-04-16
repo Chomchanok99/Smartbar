@@ -3,7 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  String? selectedTable;
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context);
@@ -42,7 +51,49 @@ class CartScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      DropdownButton<String>(
+                        isExpanded: true,
+                        value: selectedTable,
+                        hint: Text('เลือกโต๊ะ'),
+                        items: List.generate(10, (index) => '${index + 1}').map((table) {
+                          return DropdownMenuItem(
+                            child: Text('โต๊ะ $table'),
+                            value: table,
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => selectedTable = value),
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(Duration(days: 30)),
+                          );
+                          if (date != null) {
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+                            if (time != null) {
+                              setState(() {
+                                selectedDate = date;
+                                selectedTime = time;
+                              });
+                            }
+                          }
+                        },
+                        child: Text(
+                          selectedDate == null || selectedTime == null
+                              ? 'เลือกวันที่และเวลา'
+                              : '${selectedDate!.toLocal().toString().split(" ")[0]} ${selectedTime!.format(context)}',
+                        ),
+                      ),
+                      SizedBox(height: 10),
                       Text(
                         'รวมทั้งหมด: ฿${cart.total.toStringAsFixed(0)}',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -50,9 +101,16 @@ class CartScreen extends StatelessWidget {
                       SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {
+                          if (selectedTable == null || selectedDate == null || selectedTime == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
+                            );
+                            return;
+                          }
+
                           cart.clear();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('ยืนยันคำสั่งซื้อเรียบร้อย')),
+                            SnackBar(content: Text('ยืนยันคำสั่งซื้อเรียบร้อย')), 
                           );
                           Navigator.pop(context);
                         },
