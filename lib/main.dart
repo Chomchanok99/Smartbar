@@ -86,7 +86,7 @@ class RoleSelectionScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               child: Text('เข้าสู่ระบบผู้ดูแล'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 207, 130, 243)),
               onPressed: () => _showAdminLogin(context),
             ),
           ],
