@@ -6,7 +6,7 @@ class CartItem {
   final MenuItem item;
   int quantity;
 
-  CartItem(this.item, {this.quantity = 1});
+  CartItem({required this.item, this.quantity = 1});
 }
 
 class OrderRecord {
@@ -14,7 +14,7 @@ class OrderRecord {
   final DateTime dateTime;
   final List<String> items;
 
-  OrderRecord(this.tableNumber, this.dateTime, this.items);
+  OrderRecord({required this.tableNumber, required this.dateTime, required this.items});
 }
 
 class CartModel extends ChangeNotifier {
@@ -24,42 +24,61 @@ class CartModel extends ChangeNotifier {
   List<CartItem> get items => _items;
   List<OrderRecord> get orderHistory => _orderHistory;
 
-  double get total => _items.fold(0, (sum, e) => sum + e.item.price * e.quantity);
+  double get total => _items.fold(0, (sum, item) => sum + item.item.price * item.quantity);
 
   void addItem(MenuItem item) {
-    final index = _items.indexWhere((e) => e.item.name == item.name);
-    if (index >= 0) {
+    final index = _items.indexWhere((e) => e.item == item);
+    if (index != -1) {
       _items[index].quantity++;
     } else {
-      _items.add(CartItem(item));
+      _items.add(CartItem(item: item));
     }
     notifyListeners();
   }
 
-  void increaseQty(CartItem item) {
-    item.quantity++;
-    notifyListeners();
+  void removeItem(MenuItem item) {
+    final index = _items.indexWhere((e) => e.item == item);
+    if (index != -1) {
+      if (_items[index].quantity > 1) {
+        _items[index].quantity--;
+      } else {
+        _items.removeAt(index);
+      }
+      notifyListeners();
+    }
   }
 
-  void decreaseQty(CartItem item) {
-    if (item.quantity > 1) {
-      item.quantity--;
-    } else {
-      _items.remove(item);
+  void increaseQty(MenuItem item) {
+    final index = _items.indexWhere((e) => e.item == item);
+    if (index != -1) {
+      _items[index].quantity++;
+      notifyListeners();
     }
-    notifyListeners();
+  }
+
+  void decreaseQty(MenuItem item) {
+    final index = _items.indexWhere((e) => e.item == item);
+    if (index != -1) {
+      if (_items[index].quantity > 1) {
+        _items[index].quantity--;
+      } else {
+        _items.removeAt(index);
+      }
+      notifyListeners();
+    }
   }
 
   void submitOrder(String tableNumber, DateTime dateTime) {
-    final itemsSummary = _items
-        .map((item) => '${item.item.name} x${item.quantity}')
-        .toList();
-    _orderHistory.add(OrderRecord(tableNumber, dateTime, itemsSummary));
-    clear();
-  }
-
-  void clear() {
+    if (_items.isEmpty) return;
+    final orderItems = _items.map((e) => '${e.item.name} x${e.quantity}').toList();
+    _orderHistory.add(OrderRecord(
+      tableNumber: tableNumber,
+      dateTime: dateTime,
+      items: orderItems,
+    ));
     _items.clear();
     notifyListeners();
   }
+
+  void clear() {}
 }
