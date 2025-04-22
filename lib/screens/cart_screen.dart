@@ -75,23 +75,15 @@ class _CartScreenState extends State<CartScreen> {
                 ElevatedButton(
                   onPressed: () {
                     final now = DateTime.now();
-                    final formatted = DateFormat('dd/MM/yyyy HH:mm').format(now);
-                    cart.submitOrder(selectedTable, now);
+                    cart.confirmOrder(
+                      selectedTable,
+                      now,
+                      cart.items.map((e) => '${e.item.name} x ${e.quantity}').toList(),
+                    );
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('✅ ยืนยันคำสั่งซื้อเรียบร้อย'),
-                            Text('โต๊ะ: โต๊ะ $selectedTable'),
-                            Text('เวลา: $formatted'),
-                            Text('รายการที่สั่ง:'),
-                            ...cart.items.map((e) => Text('${e.item.name} x${e.quantity}')).toList(),
-                          ],
-                        ),
-                        duration: Duration(seconds: 4),
+                        content: Text('✅ บันทึกคำสั่งซื้อแล้ว'),
                       ),
                     );
 

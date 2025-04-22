@@ -11,10 +11,14 @@ class CartItem {
 
 class OrderRecord {
   final String tableNumber;
-  final DateTime dateTime;
+  final String dateTime;
   final List<String> items;
 
-  OrderRecord({required this.tableNumber, required this.dateTime, required this.items});
+  OrderRecord({
+    required this.tableNumber,
+    required this.dateTime,
+    required this.items,
+  });
 }
 
 class CartModel extends ChangeNotifier {
@@ -68,17 +72,17 @@ class CartModel extends ChangeNotifier {
     }
   }
 
-  void submitOrder(String tableNumber, DateTime dateTime) {
-    if (_items.isEmpty) return;
-    final orderItems = _items.map((e) => '${e.item.name} x${e.quantity}').toList();
+  void confirmOrder(String tableNumber, DateTime dateTime, List<String> items) {
     _orderHistory.add(OrderRecord(
-      tableNumber: tableNumber,
-      dateTime: dateTime,
-      items: orderItems,
+      tableNumber: 'โต๊ะ $tableNumber',
+      dateTime: '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute}',
+      items: items,
     ));
-    _items.clear();
     notifyListeners();
   }
 
-  void clear() {}
+  void clear() {
+    _items.clear();
+    notifyListeners();
+  }
 }

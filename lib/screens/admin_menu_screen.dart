@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
+import '../models/menu_item.dart';
+import '../data/sample_menu.dart';
+import 'order_history_screen.dart';
 
 class AdminMenuScreen extends StatefulWidget {
   @override
@@ -9,73 +12,133 @@ class AdminMenuScreen extends StatefulWidget {
 }
 
 class _AdminMenuScreenState extends State<AdminMenuScreen> {
-  String selectedTable = '1';
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  String _category = 'ของทานเล่น';
+  String? _selectedImage;
+
+  final List<String> _imageOptions = [
+    'assets/images/fried_rice.jpg',
+    'assets/images/tomyum.jpg',
+    'assets/images/padthai.jpg',
+    'assets/images/padthai.jpg',
+    'assets/images/padthai.jpg',
+  ];
+
+  void _addMenuItem() {
+    final name = _nameController.text.trim();
+    final price = double.tryParse(_priceController.text.trim());
+    if (name.isNotEmpty && price != null && _selectedImage != null) {
+      setState(() {
+        sampleMenu.add(MenuItem(
+          name: name,
+          price: price,
+          imagePath: _selectedImage!,
+          category: _category,
+        ));
+        _nameController.clear();
+        _priceController.clear();
+        _selectedImage = null;
+      });
+    }
+  }
+
+  void _removeMenuItem(int index) {
+    setState(() {
+      sampleMenu.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final cartModel = Provider.of<CartModel>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('จัดการเมนู')), 
+      appBar: AppBar(
+        title: Text('จัดการเมนู'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.receipt_long),
+            tooltip: 'ตรวจสอบการสั่งซื้อ',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => OrderHistoryScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Row(
+            child: Column(
               children: [
-                Text('เลือกโต๊ะ: '),
-                DropdownButton<String>(
-                  value: selectedTable,
-                  items: List.generate(10, (i) => '${i + 1}').map((t) {
-                    return DropdownMenuItem(
-                      value: t,
-                      child: Text('โต๊ะ $t'),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => selectedTable = value!),
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'ชื่อเมนู'),
                 ),
+                TextField(
+                  controller: _priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'ราคา'),
+                ),
+                DropdownButton<String>(
+                  value: _selectedImage,
+                  isExpanded: true,
+                  hint: Text('เลือกรูปภาพ'),
+                  items: _imageOptions
+                      .map((path) => DropdownMenuItem(
+                            value: path,
+                            child: Row(
+                              children: [
+                                Image.asset(path, width: 30, height: 30),
+                                SizedBox(width: 10),
+                                Text(path.split('/').last),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (value) => setState(() => _selectedImage = value),
+                ),
+                DropdownButton<String>(
+                  value: _category,
+                  isExpanded: true,
+                  items: ['ของทานเล่น', 'เครื่องดื่ม']
+                      .map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat),
+                          ))
+                      .toList(),
+                  onChanged: (value) => setState(() => _category = value!),
+                ),
+                ElevatedButton(
+                  onPressed: _addMenuItem,
+                  child: Text('เพิ่มเมนู'),
+                )
               ],
             ),
           ),
           Expanded(
-            child: OrderHistoryList(
-              filterTable: selectedTable,
-              orders: cartModel.orderHistory,
+            child: ListView.builder(
+              itemCount: sampleMenu.length,
+              itemBuilder: (context, index) {
+                final item = sampleMenu[index];
+                return ListTile(
+                  leading: Image.asset(item.imagePath, width: 50, height: 50),
+                  title: Text(item.name),
+                  subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _removeMenuItem(index),
+                  ),
+                );
+              },
             ),
           )
         ],
       ),
-    );
-  }
-}
-
-class OrderHistoryList extends StatelessWidget {
-  final String filterTable;
-  final List<OrderRecord> orders;
-
-  const OrderHistoryList({required this.filterTable, required this.orders});
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredOrders = orders
-        .where((o) => o.tableNumber == filterTable)
-        .toList();
-
-    return ListView.builder(
-      itemCount: filteredOrders.length,
-      itemBuilder: (context, index) {
-        final order = filteredOrders[index];
-        return ListTile(
-          title: Text('โต๊ะ ${order.tableNumber}'),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('เวลา: ${order.dateTime}'),
-              ...order.items.map((item) => Text(item)).toList()
-            ],
-          ),
-        );
-      },
     );
   }
 }
