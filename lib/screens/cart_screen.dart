@@ -1,8 +1,8 @@
-// lib/screens/cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
+import '../services/service.dart';
 
 class CartScreen extends StatefulWidget {
   @override
@@ -10,16 +10,14 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  String selectedTable = '1';
+  String selectedTable = 'โต๊ะ 1';
 
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('ตะกร้าสินค้า'),
-      ),
+      appBar: AppBar(title: Text('ตะกร้าสินค้า')),
       body: Column(
         children: [
           Expanded(
@@ -55,12 +53,10 @@ class _CartScreenState extends State<CartScreen> {
                 SizedBox(width: 8),
                 DropdownButton<String>(
                   value: selectedTable,
-                  items: List.generate(10, (i) => '${i + 1}').map((t) {
-                    return DropdownMenuItem(
-                      value: t,
-                      child: Text('โต๊ะ $t'),
-                    );
-                  }).toList(),
+                  items:
+                      List.generate(10, (i) => 'โต๊ะ ${i + 1}').map((t) {
+                        return DropdownMenuItem(value: t, child: Text(t));
+                      }).toList(),
                   onChanged: (value) => setState(() => selectedTable = value!),
                 ),
               ],
@@ -73,28 +69,43 @@ class _CartScreenState extends State<CartScreen> {
               children: [
                 Text('รวมทั้งหมด: ฿${cart.total.toStringAsFixed(0)}'),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final now = DateTime.now();
-                    cart.confirmOrder(
-                      selectedTable,
-                      now,
-                      cart.items.map((e) => '${e.item.name} x ${e.quantity}').toList(),
-                    );
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('✅ บันทึกคำสั่งซื้อแล้ว'),
-                      ),
-                    );
+                    try {
+                      await ApiService().submitOrder(
+                        selectedTable,
+                        now,
+                        cart.total,
+                        cart.items
+                            .map(
+                              (e) => {
+                                'name': e.item.name,
+                                'quantity': e.quantity,
+                              },
+                            )
+                            .toList(),
+                      );
 
-                    cart.clear();
-                    Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('✅ บันทึกคำสั่งซื้อแล้ว')),
+                      );
+
+                      cart.clear();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('❌ เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ'),
+                        ),
+                      );
+                    }
                   },
                   child: Text('ยืนยันคำสั่งซื้อ'),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

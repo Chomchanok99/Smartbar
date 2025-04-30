@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
 import '../models/menu_item.dart';
-import '../data/sample_menu.dart';
+import '../services/service.dart';
 import 'order_history_screen.dart';
 
 class AdminMenuScreen extends StatefulWidget {
@@ -15,12 +15,14 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
   final _priceController = TextEditingController();
   String _category = 'ของทานเล่น';
   String? _selectedImage;
-  int? _editIndex;
+  int? _editId;
+
+  final ApiService _apiService = ApiService();
+  List<MenuItem> _menuItems = [];
 
   final List<String> _imageOptions = [
     'assets/images/fried_rice.jpg',
     'assets/images/tomyum.jpg',
-    'assets/images/padthai.jpg',
     'assets/images/padthai.jpg',
     'assets/images/CheckenPop.jpg',
     'assets/images/checkwingfrie.jpg',
@@ -38,69 +40,66 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
     'assets/images/red.jpg',
   ];
 
-  void _addMenuItem() {
+  @override
+  void initState() {
+    super.initState();
+    _loadMenuItems();
+  }
+
+  Future<void> _loadMenuItems() async {
+    final items = await _apiService.fetchMenuItems();
+    setState(() => _menuItems = items);
+  }
+
+  Future<void> _submitMenuItem() async {
     final name = _nameController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
-    if (name.isNotEmpty && price != null && _selectedImage != null) {
-      setState(() {
-        sampleMenu.add(
-          MenuItem(
-            name: name,
-            price: price,
-            imagePath: _selectedImage!,
-            category: _category,
-          ),
-        );
-        _nameController.clear();
-        _priceController.clear();
-        _selectedImage = null;
-      });
+    if (name.isEmpty || price == null || _selectedImage == null) return;
+
+    final item = MenuItem(
+      id: _editId,
+      name: name,
+      price: price,
+      imagepath: _selectedImage!,
+      category: _category,
+    );
+
+    try {
+      if (_editId == null) {
+        await _apiService.addMenuItem(item);
+      } else {
+        await _apiService.updateMenuItem(item);
+      }
+      _resetForm();
+      _loadMenuItems();
+    } catch (e) {
+      print('Error saving item: $e');
     }
   }
 
-  void _editMenuItem(int index) {
-    final item = sampleMenu[index];
+  void _resetForm() {
+    _nameController.clear();
+    _priceController.clear();
+    _selectedImage = null;
+    _editId = null;
+    _category = 'ของทานเล่น';
+  }
+
+  void _editMenuItem(MenuItem item) {
     _nameController.text = item.name;
     _priceController.text = item.price.toString();
-    _selectedImage = item.imagePath;
+    _selectedImage = item.imagepath;
     _category = item.category;
-    setState(() {
-      _editIndex = index;
-    });
+    _editId = item.id;
   }
 
-  void _saveEditedMenuItem() {
-    final name = _nameController.text.trim();
-    final price = double.tryParse(_priceController.text.trim());
-    if (name.isNotEmpty &&
-        price != null &&
-        _selectedImage != null &&
-        _editIndex != null) {
-      setState(() {
-        sampleMenu[_editIndex!] = MenuItem(
-          name: name,
-          price: price,
-          imagePath: _selectedImage!,
-          category: _category,
-        );
-        _nameController.clear();
-        _priceController.clear();
-        _selectedImage = null;
-        _editIndex = null;
-      });
-    }
-  }
-
-  void _removeMenuItem(int index) {
-    setState(() {
-      sampleMenu.removeAt(index);
-    });
+  Future<void> _deleteMenuItem(int id) async {
+    await _apiService.deleteMenuItem(id);
+    _loadMenuItems();
   }
 
   @override
   Widget build(BuildContext context) {
-    final cartModel = Provider.of<CartModel>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('จัดการเมนู'),
@@ -134,8 +133,8 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                 ),
                 DropdownButton<String>(
                   value: _selectedImage,
-                  isExpanded: true,
                   hint: Text('เลือกรูปภาพ'),
+                  isExpanded: true,
                   items:
                       _imageOptions
                           .map(
@@ -143,7 +142,14 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                               value: path,
                               child: Row(
                                 children: [
-                                  Image.asset(path, width: 30, height: 30),
+                                  Image.asset(
+                                    path,
+                                    width: 30,
+                                    height: 30,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Icon(Icons.broken_image),
+                                  ),
                                   SizedBox(width: 10),
                                   Text(path.split('/').last),
                                 ],
@@ -151,13 +157,17 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                             ),
                           )
                           .toList(),
-                  onChanged: (value) => setState(() => _selectedImage = value),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedImage = value!;
+                    });
+                  },
                 ),
                 DropdownButton<String>(
                   value: _category,
                   isExpanded: true,
                   items:
-                      ['ของทานเล่น', 'เครื่องดื่ม']
+                      ['ของทานเล่น', 'เครื่องดื่ม', 'อาหารจานเดียว']
                           .map(
                             (cat) =>
                                 DropdownMenuItem(value: cat, child: Text(cat)),
@@ -166,22 +176,30 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                   onChanged: (value) => setState(() => _category = value!),
                 ),
                 ElevatedButton(
-                  onPressed:
-                      _editIndex == null ? _addMenuItem : _saveEditedMenuItem,
-                  child: Text(
-                    _editIndex == null ? 'เพิ่มเมนู' : 'บันทึกการแก้ไข',
-                  ),
+                  onPressed: _submitMenuItem,
+                  child: Text(_editId == null ? 'เพิ่มเมนู' : 'บันทึกการแก้ไข'),
                 ),
               ],
             ),
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: sampleMenu.length,
+              itemCount: _menuItems.length,
               itemBuilder: (context, index) {
-                final item = sampleMenu[index];
+                final item = _menuItems[index];
                 return ListTile(
-                  leading: Image.asset(item.imagePath, width: 50, height: 50),
+                  leading: Image.asset(
+                    item.imagepath,
+                    width: 50,
+                    height: 50,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/images/chang.jpg',
+                        width: 50,
+                        height: 50,
+                      );
+                    },
+                  ),
                   title: Text(item.name),
                   subtitle: Text('฿${item.price.toStringAsFixed(0)}'),
                   trailing: Row(
@@ -189,11 +207,11 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                     children: [
                       IconButton(
                         icon: Icon(Icons.edit),
-                        onPressed: () => _editMenuItem(index),
+                        onPressed: () => _editMenuItem(item),
                       ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _removeMenuItem(index),
+                        onPressed: () => _deleteMenuItem(item.id!),
                       ),
                     ],
                   ),
